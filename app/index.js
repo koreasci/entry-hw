@@ -1,22 +1,38 @@
 'use strict';
 
 const electron = require('electron');
-const {app, BrowserWindow, Menu, globalShortcut, ipcMain, webContents} = electron;
+const {
+    app,
+    BrowserWindow,
+    Menu,
+    globalShortcut,
+    ipcMain,
+    webContents,
+    dialog,
+    net,
+} = electron;
 const path = require('path');
 const fs = require('fs');
-const packageJson     = require('./package.json');
+const packageJson = require('../package.json');
 const ChildProcess = require('child_process');
-var mainWindow = null;
+let mainWindow = null;
+let aboutWindow = null;
 var isClose = true;
 var roomId = [];
 let isForceClose = false;
+let hostURI = 'playentry.org';
+let hostProtocol = 'https:';
 
-console.fslog = function (text) {    
-    var log_path = path.join(__dirname, '..');
-    if(!fs.existsSync(log_path)) {
+global.sharedObject = {
+    appName: 'hardware',
+};
+
+console.fslog = function(text) {
+    var log_path = path.join(__dirname, '..', '..');
+    if (!fs.existsSync(log_path)) {
         fs.mkdirSync(log_path);
     }
-    if(!fs.existsSync(path.join(log_path, 'debug.log'))) {
+    if (!fs.existsSync(path.join(log_path, 'debug.log'))) {
         fs.writeFileSync(path.join(log_path, 'debug.log'), '', 'utf8');
     }
     var data = fs.readFileSync(path.join(log_path, 'debug.log'), 'utf8');
@@ -24,12 +40,57 @@ console.fslog = function (text) {
     fs.writeFileSync(path.join(log_path, 'debug.log'), data, 'utf8');
 };
 
+function lpad(str, len) {
+    var strLen = str.length;
+    if (strLen < len) {
+        for (var i=0; i<len-strLen; i++) {
+            str = "0" + str;
+        }
+    }
+    return String(str);
+};
+
+function getPaddedVersion(version) {
+    if(!version) {
+        return '';
+    }
+    version = String(version);
+
+    var padded = [];
+    var splitVersion = version.split('.');
+    splitVersion.forEach(function (item) {
+        padded.push(lpad(item, 4));
+    });
+
+    return padded.join('.');
+}
+
+function createAboutWindow(mainWindow) {
+    aboutWindow = new BrowserWindow({
+        parent: mainWindow,
+        width: 380,
+        height: 290,
+        resizable: false,
+        movable: false,
+        center: true,
+        frame: false,
+        modal: true,
+        show: false,
+    });
+
+    aboutWindow.loadURL('file:///' + path.resolve(__dirname, 'src', 'views', 'about.html'));
+
+    aboutWindow.on('closed', ()=> {
+        aboutWindow = null;
+    });
+}
+
 function getArgsParseData(argv) {
     var regexRoom = /roomId:(.*)/;
     var arrRoom = regexRoom.exec(argv) || ['', ''];
     var roomId = arrRoom[1];
 
-    if(roomId === 'undefined') {
+    if (roomId === 'undefined') {
         roomId = '';
     }
 
@@ -42,14 +103,20 @@ app.on('window-all-closed', function() {
 
 var argv = process.argv.slice(1);
 
-if(argv.indexOf('entryhw:')) {
+if (argv.indexOf('entryhw:')) {
     var data = getArgsParseData(argv);
-    if(data) {
+    if (data) {
         roomId.push(data);
     }
 }
 
-var option = { file: null, help: null, version: null, webdriver: null, modules: [] };
+var option = {
+    file: null,
+    help: null,
+    version: null,
+    webdriver: null,
+    modules: [],
+};
 for (var i = 0; i < argv.length; i++) {
     if (argv[i] == '--version' || argv[i] == '-v') {
         option.version = true;
@@ -57,16 +124,14 @@ for (var i = 0; i < argv.length; i++) {
     } else if (argv[i].match(/^--app=/)) {
         option.file = argv[i].split('=')[1];
         break;
-    } else if (argv[i] == '--help' || argv[i] == '-h') {
-        option.help = true;
-        break;
-    } else if (argv[i] == '--test-type=webdriver') {
-        option.webdriver = true;
     } else if (argv[i] == '--debug' || argv[i] == '-d') {
         option.debug = true;
         continue;
-    } else if (argv[i] == '--require' || argv[i] == '-r') {
-        option.modules.push(argv[++i]);
+    } else if (argv[i].match(/^--host=/) || argv[i].match(/^-h=/)) {
+        hostURI = argv[i].split('=')[1];
+        continue;
+    } else if (argv[i].match(/^--protocol=/) || argv[i].match(/^-p=/)) {
+        hostProtocol = argv[i].split('=')[1];
         continue;
     } else if (argv[i][0] == '-') {
         continue;
@@ -76,123 +141,180 @@ for (var i = 0; i < argv.length; i++) {
     }
 }
 
-// 어플리케이션을 중복 실행했습니다. 주 어플리케이션 인스턴스를 활성화 합니다.
-var shouldQuit = app.makeSingleInstance(function(argv, workingDirectory) {
-    var parseData = {};
-    if(argv.indexOf('entryhw:')) {
-        parseData = getArgsParseData(argv);
-    }
-    
-    if (mainWindow) {
-        if (mainWindow.isMinimized()) 
-            mainWindow.restore();
-        mainWindow.focus();
-
-        if(mainWindow.webContents) {
-            if(roomId.indexOf(parseData) === -1) {
-                roomId.push(parseData);
-            }
-            mainWindow.webContents.send('customArgs', parseData);
-        }
-    }
-
-    return true;
-});
-
-if (shouldQuit) {
+if (!app.requestSingleInstanceLock()) {
     app.quit();
-}
+    process.exit(0);
+} else {
+    // 어플리케이션을 중복 실행했습니다. 주 어플리케이션 인스턴스를 활성화 합니다.
+    app.on('second-instance', (event, argv, workingDirectory) => {
+        let parseData = {};
+        if (argv.indexOf('entryhw:')) {
+            parseData = getArgsParseData(argv);
+        }
 
-ipcMain.on('reload', function(event, arg) {
-    app.relaunch({args: process.argv.slice(1).concat(['--relaunch'])});
-    app.exit(0);
-});
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
 
-ipcMain.on('roomId', function(event, arg) {
-    event.returnValue = roomId;
-});
-
-ipcMain.on('version', function(event, arg) {
-    event.returnValue = packageJson.version;
-});
-
-ipcMain.on('serverMode', function(event, mode) {
-    if(mainWindow && mainWindow.webContents) {
-        mainWindow.webContents.send('serverMode', mode);
-    }
-});
-
-app.commandLine.appendSwitch('enable-web-bluetooth', true);
-app.commandLine.appendSwitch('enable-experimental-web-platform-features', true);
-// app.commandLine.appendSwitch('enable-web-bluetooth');
-app.once('ready', function() {
-    let language = app.getLocale();
-
-    let title;
-
-    if(language === 'ko') {
-        title = '엔트리 하드웨어 v';
-    } else {
-        title = 'Entry Hardware v'
-    }
-
-    mainWindow = new BrowserWindow({
-        width: 800, 
-        height: 650, 
-        title: title + packageJson.version,
-        webPreferences: {
-            backgroundThrottling: false
+            if (mainWindow.webContents) {
+                if (roomId.indexOf(parseData) === -1) {
+                    roomId.push(parseData);
+                }
+                mainWindow.webContents.send('customArgs', parseData);
+            }
         }
     });
 
-    mainWindow.webContents.on('select-bluetooth-device', (event, deviceList, callback) => {
-        event.preventDefault()
-        let result = deviceList.find((device) => {
-            console.log(device);
-            return device.deviceName === 'LPF2 Smart Hub 2 I/O';
-        })
-        if (!result) {
-            callback('A0:E6:F8:1D:FB:E3')
+    ipcMain.on('reload', function(event, arg) {
+        app.relaunch({ args: process.argv.slice(1).concat(['--relaunch']) });
+        app.exit(0);
+    });
+
+    ipcMain.on('roomId', function(event, arg) {
+        event.returnValue = roomId;
+    });
+
+    ipcMain.on('version', function(event, arg) {
+        event.returnValue = packageJson.version;
+    });
+
+    ipcMain.on('serverMode', function(event, mode) {
+        if (mainWindow && mainWindow.webContents) {
+            mainWindow.webContents.send('serverMode', mode);
+        }
+    });
+
+    app.commandLine.appendSwitch('enable-web-bluetooth', true);
+    app.commandLine.appendSwitch('enable-experimental-web-platform-features', true);
+    // app.commandLine.appendSwitch('enable-web-bluetooth');
+    app.once('ready', function() {
+        let language = app.getLocale();
+
+        let title;
+
+        if (language === 'ko') {
+            title = '엔트리 하드웨어 v';
         } else {
-            callback(result.deviceId)
+            title = 'Entry Hardware v';
         }
-    })
 
-    mainWindow.loadURL('file:///' + path.join(__dirname, 'index.html'));
+        mainWindow = new BrowserWindow({
+            width: 800,
+            height: 670,
+            title: title + packageJson.version,
+            webPreferences: {
+                backgroundThrottling: false,
+            },
+        });
 
-    if(option.debug) {
-        mainWindow.webContents.openDevTools();
-    }
+        mainWindow.webContents.on(
+            'select-bluetooth-device',
+            (event, deviceList, callback) => {
+                event.preventDefault();
+                let result = deviceList.find((device) => {
+                    return device.deviceName === 'LPF2 Smart Hub 2 I/O';
+                });
+                if (!result) {
+                    callback('A0:E6:F8:1D:FB:E3');
+                } else {
+                    callback(result.deviceId);
+                }
+            }
+        );
 
-    mainWindow.setMenu(null);
+        mainWindow.loadURL('file:///' + path.join(__dirname, 'index.html'));
 
-    mainWindow.on('close', function(e) {
-        if(!isForceClose) {
-            e.preventDefault();
-            mainWindow.webContents.send('hardwareClose');
+        if (option.debug) {
+            mainWindow.webContents.openDevTools();
         }
+
+        mainWindow.setMenu(null);
+
+        mainWindow.on('close', function(e) {
+            if (!isForceClose) {
+                e.preventDefault();
+                mainWindow.webContents.send('hardwareClose');
+            }
+        });
+
+        mainWindow.on('closed', function() {
+            mainWindow = null;
+        });
+
+        let inspectorShortcut = '';
+        if (process.platform == 'darwin') {
+            inspectorShortcut = 'Command+Alt+i';
+        } else {
+            inspectorShortcut = 'Control+Shift+i';
+        }
+
+        globalShortcut.register(inspectorShortcut, (e) => {
+            const content = webContents.getFocusedWebContents();
+            if (content) {
+                webContents.getFocusedWebContents().openDevTools();
+            }
+        });
+
+        createAboutWindow(mainWindow);
     });
 
-    mainWindow.on('closed', function() {
-        mainWindow = null;
+    ipcMain.on('hardwareForceClose', () => {
+        isForceClose = true;
+        mainWindow.close();
     });
 
-    let inspectorShortcut = '';
-    if(process.platform == 'darwin') {
-        inspectorShortcut = 'Command+Alt+i';
-    } else {
-        inspectorShortcut = 'Control+Shift+i';
-    }
-
-    globalShortcut.register(inspectorShortcut, (e) => {
-        const content = webContents.getFocusedWebContents();
-        if(content) {
-            webContents.getFocusedWebContents().openDevTools(); 
-        }
+    ipcMain.on('showMessageBox', (e, msg) => {
+        dialog.showMessageBox({
+            type: 'none',
+            message: msg,
+            detail: msg,
+        });
     });
-});
 
-ipcMain.on('hardwareForceClose', () => {
-    isForceClose = true;
-    mainWindow.close();
-});
+    ipcMain.on('checkUpdate', (e, msg) => {
+        const request = net.request({
+            method: 'POST',
+            host: hostURI,
+            protocol: hostProtocol,
+            path: '/api/checkVersion',
+        });
+        let body = '';
+        request.on('response', (res) => {
+            res.on('data', (chunk) => {
+                body += chunk.toString();
+            });
+            res.on('end', () => {
+                let data = {};
+                try {
+                    data = JSON.parse(body);
+                } catch (e) {}
+                e.sender.send('checkUpdateResult', data);
+            });
+        });
+        request.on('error', (err) => {
+        });
+        request.setHeader('content-type', 'application/json; charset=utf-8');
+        request.write(
+            JSON.stringify({
+                category: 'hardware',
+                version: packageJson.version,
+            })
+        );
+        request.end();
+    });
+
+    ipcMain.on('checkVersion', (e, lastCheckVersion) => {
+        const version = getPaddedVersion(packageJson.version);
+        const lastVersion = getPaddedVersion(lastCheckVersion);
+
+        e.sender.send('checkVersionResult', lastVersion > version);
+    });
+
+    ipcMain.on('openAboutWindow', function(event, arg) {
+        aboutWindow.show();
+    });
+
+    ipcMain.on('writeLog', function(event, arg) {
+        console.fslog(arg);
+    });
+}

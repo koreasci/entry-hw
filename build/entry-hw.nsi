@@ -1,9 +1,9 @@
-; example1.nsi
+ï»¿; example1.nsi
 ;
 ; This script is perhaps one of the simplest NSIs you can make. All of the
-; optional settings are left to their default settings. The installer simply 
+; optional settings are left to their default settings. The installer simply
 ; prompts the user asking them where to install, and drops a copy of example1.nsi
-; there. 
+; there.
 
 !include MUI2.nsh
 
@@ -14,16 +14,16 @@
 !define PRODUCT_NAME "Entry_HW"
 !define PROTOCOL_NAME "entryhw"
 !define APP_NAME "Entry_HW.exe"
-!define PRODUCT_VERSION "1.6.10"
+!define PRODUCT_VERSION "1.6.34"
 !define PRODUCT_PUBLISHER "EntryLabs"
 !define PRODUCT_WEB_SITE "http://www.play-entry.org/"
- 
+
 ; MUI Settings / Header
 ;!define MUI_HEADERIMAGE
 ;!define MUI_HEADERIMAGE_RIGHT
 ;!define MUI_HEADERIMAGE_BITMAP "${NSISDIR}\Contrib\Graphics\Header\orange-r-nsis.bmp"
 ;!define MUI_HEADERIMAGE_UNBITMAP "${NSISDIR}\Contrib\Graphics\Header\orange-uninstall-r-nsis.bmp"
- 
+
 ; MUI Settings / Wizard
 ;!define MUI_WELCOMEFINISHPAGE_BITMAP "${NSISDIR}\Contrib\Graphics\Wizard\orange-nsis.bmp"
 ;!define MUI_UNWELCOMEFINISHPAGE_BITMAP "${NSISDIR}\Contrib\Graphics\Wizard\orange-uninstall-nsis.bmp"
@@ -39,7 +39,7 @@ OutFile "${PRODUCT_NAME}_${PRODUCT_VERSION}_Setup.exe"
 ; The default installation directory
 InstallDir "C:\${PRODUCT_NAME}"
 
-; Registry key to check for directory (so if you install again, it will 
+; Registry key to check for directory (so if you install again, it will
 ; overwrite the old one automatically)
 InstallDirRegKey HKLM "Software\${PRODUCT_NAME}" "Install_Dir"
 
@@ -63,73 +63,75 @@ RequestExecutionLevel admin
 !insertmacro MUI_UNPAGE_INSTFILES
 ;--------------------------------
 
-; ´Ù±¹¾î ¼³Á¤
+; ë‹¤êµ­ì–´ ì„¤ì •
 !insertmacro MUI_LANGUAGE "Korean" ;first language is the default language
 
-LangString TEXT_ENTRY ${LANG_KOREAN} "¿£Æ®¸® ÇÏµå¿ş¾î"
-LangString TEXT_ENTRY_DELETE ${LANG_KOREAN} "¿£Æ®¸® ÇÏµå¿ş¾î Á¦°Å"
-LangString TEXT_ENTRY_TITLE ${LANG_KOREAN} "¿£Æ®¸® ÇÏµå¿ş¾î (ÇÊ¼ö)"
-LangString TEXT_START_MENU_TITLE ${LANG_KOREAN} "½ÃÀÛ¸Ş´º¿¡ ¹Ù·Î°¡±â"
-LangString TEXT_DESKTOP_TITLE ${LANG_KOREAN} "¹ÙÅÁÈ­¸é¿¡ ¹Ù·Î°¡±â"
-LangString DESC_ENTRY ${LANG_KOREAN} "¿£Æ®¸® ÇÏµå¿ş¾î"
-LangString START_ENTRY ${LANG_KOREAN} "¿£Æ®¸® ÇÏµå¿ş¾î ½ÃÀÛÇÏ±â"
-LangString DESC_START_MENU ${LANG_KOREAN} "½ÃÀÛ¸Ş´º¿¡ ¹Ù·Î°¡±â ¾ÆÀÌÄÜÀÌ »ı¼ºµË´Ï´Ù."
-LangString DESC_DESKTOP ${LANG_KOREAN} "¹ÙÅÁÈ­¸é¿¡ ¹Ù·Î°¡±â ¾ÆÀÌÄÜÀÌ »ı¼ºµË´Ï´Ù."
-LangString SETUP_UNINSTALL_MSG ${LANG_KOREAN} "¿£Æ®¸® ÇÏµå¿ş¾î°¡ ÀÌ¹Ì ¼³Ä¡µÇ¾î ÀÖ½À´Ï´Ù. $\n$\r'È®ÀÎ' ¹öÆ°À» ´©¸£¸é ÀÌÀü ¹öÀüÀ» »èÁ¦ ÈÄ Àç¼³Ä¡ÇÏ°í 'Ãë¼Ò' ¹öÆ°À» ´©¸£¸é ¾÷±×·¹ÀÌµå¸¦ Ãë¼ÒÇÕ´Ï´Ù."
+LangString TEXT_ENTRY ${LANG_KOREAN} "ì—”íŠ¸ë¦¬ í•˜ë“œì›¨ì–´"
+LangString TEXT_ENTRY_DELETE ${LANG_KOREAN} "ì—”íŠ¸ë¦¬ í•˜ë“œì›¨ì–´ ì œê±°"
+LangString TEXT_ENTRY_TITLE ${LANG_KOREAN} "ì—”íŠ¸ë¦¬ í•˜ë“œì›¨ì–´ (í•„ìˆ˜)"
+LangString TEXT_START_MENU_TITLE ${LANG_KOREAN} "ì‹œì‘ë©”ë‰´ì— ë°”ë¡œê°€ê¸°"
+LangString TEXT_DESKTOP_TITLE ${LANG_KOREAN} "ë°”íƒ•í™”ë©´ì— ë°”ë¡œê°€ê¸°"
+LangString DESC_ENTRY ${LANG_KOREAN} "ì—”íŠ¸ë¦¬ í•˜ë“œì›¨ì–´"
+LangString START_ENTRY ${LANG_KOREAN} "ì—”íŠ¸ë¦¬ í•˜ë“œì›¨ì–´ ì‹œì‘í•˜ê¸°"
+LangString DESC_START_MENU ${LANG_KOREAN} "ì‹œì‘ë©”ë‰´ì— ë°”ë¡œê°€ê¸° ì•„ì´ì½˜ì´ ìƒì„±ë©ë‹ˆë‹¤."
+LangString DESC_DESKTOP ${LANG_KOREAN} "ë°”íƒ•í™”ë©´ì— ë°”ë¡œê°€ê¸° ì•„ì´ì½˜ì´ ìƒì„±ë©ë‹ˆë‹¤."
+LangString SETUP_UNINSTALL_MSG ${LANG_KOREAN} "ì—”íŠ¸ë¦¬ í•˜ë“œì›¨ì–´ê°€ ì´ë¯¸ ì„¤ì¹˜ë˜ì–´ ìˆìŠµë‹ˆë‹¤. $\n$\r'í™•ì¸' ë²„íŠ¼ì„ ëˆ„ë¥´ë©´ ì´ì „ ë²„ì „ì„ ì‚­ì œ í›„ ì¬ì„¤ì¹˜í•˜ê³  'ì·¨ì†Œ' ë²„íŠ¼ì„ ëˆ„ë¥´ë©´ ì—…ê·¸ë ˆì´ë“œë¥¼ ì·¨ì†Œí•©ë‹ˆë‹¤."
 
 
 !insertmacro MUI_LANGUAGE "English"
 
-LangString TEXT_ENTRY ${LANG_ENGLISTH} "Entry HW"
-LangString TEXT_ENTRY_DELETE ${LANG_ENGLISTH} "Entry HW Uninstall"
-LangString TEXT_ENTRY_TITLE ${LANG_ENGLISTH} "Entry HW (required)"
-LangString TEXT_START_MENU_TITLE ${LANG_ENGLISTH} "Start menu shortcut"
-LangString TEXT_DESKTOP_TITLE ${LANG_ENGLISTH} "Desktop shortcut"
-LangString DESC_ENTRY ${LANG_ENGLISTH} "Entry HW Program"
-LangString START_ENTRY ${LANG_ENGLISTH} "Start Entry HW Program"
-LangString DESC_START_MENU ${LANG_ENGLISTH} "Create shortcut on start menu"
-LangString DESC_DESKTOP ${LANG_ENGLISTH} "Create shortcut on desktop"
-LangString SETUP_UNINSTALL_MSG ${LANG_ENGLISTH} "Entry_HW is already installed. $\n$\nClick 'OK' to remove the previous version or 'Cancel' to cancel this upgrade."
+LangString TEXT_ENTRY ${LANG_ENGLISH} "Entry HW"
+LangString TEXT_ENTRY_DELETE ${LANG_ENGLISH} "Entry HW Uninstall"
+LangString TEXT_ENTRY_TITLE ${LANG_ENGLISH} "Entry HW (required)"
+LangString TEXT_START_MENU_TITLE ${LANG_ENGLISH} "Start menu shortcut"
+LangString TEXT_DESKTOP_TITLE ${LANG_ENGLISH} "Desktop shortcut"
+LangString DESC_ENTRY ${LANG_ENGLISH} "Entry HW Program"
+LangString START_ENTRY ${LANG_ENGLISH} "Start Entry HW Program"
+LangString DESC_START_MENU ${LANG_ENGLISH} "Create shortcut on start menu"
+LangString DESC_DESKTOP ${LANG_ENGLISH} "Create shortcut on desktop"
+LangString SETUP_UNINSTALL_MSG ${LANG_ENGLISH} "Entry_HW is already installed. $\n$\nClick 'OK' to remove the previous version or 'Cancel' to cancel this upgrade."
 
 
 ; The stuff to install
 Section $(TEXT_ENTRY_TITLE) SectionEntry
   SectionIn RO
-  
+
   ; Set output path to the installation directory.
   ;SetOutPath $INSTDIR
-  
+
+  ; Delete roaming/entry_hw for initialize update check logic
+  RMDir /r "$PROFILE\AppData\Roaming\entry_hw"
 
   ; Put file there
   SetOutPath "$INSTDIR\locales"
   File "..\dist\win-ia32-unpacked\locales\*.*"
-  
+
   SetOutPath "$INSTDIR\resources"
   File /r "..\dist\win-ia32-unpacked\resources\*.*"
-  
+
   SetOutPath "$INSTDIR"
   File "..\dist\win-ia32-unpacked\*.*"
   File "icon.ico"
-  
+
   WriteRegStr HKCR "${PROTOCOL_NAME}" "URL Protocol" ""
-  WriteRegStr HKCR "${PROTOCOL_NAME}\DefaultIcon" "" "$INSTDIR\icon.ico"  
+  WriteRegStr HKCR "${PROTOCOL_NAME}\DefaultIcon" "" "$INSTDIR\icon.ico"
   WriteRegStr HKCR "${PROTOCOL_NAME}\Shell\Open" "" "&Open"
   WriteRegStr HKCR "${PROTOCOL_NAME}\Shell\Open\Command" "" '"$INSTDIR\${PRODUCT_NAME}.exe" "%1"'
-  
+
   ; Write the installation path into the registry
   WriteRegStr HKLM "SOFTWARE\${PRODUCT_NAME}" "Install_Dir" "$INSTDIR"
-  
+
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayName" "$(TEXT_ENTRY)"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "Publisher" "${PRODUCT_PUBLISHER}"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"  
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "UninstallString" '"$INSTDIR\$(TEXT_ENTRY_DELETE).exe"'
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayIcon" '"$INSTDIR\icon.ico"'
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "NoRepair" 1
   WriteUninstaller "\$(TEXT_ENTRY_DELETE).exe"
-  
+
 SectionEnd
 
 ; Optional section (can be disabled by the user)
@@ -139,7 +141,7 @@ Section $(TEXT_START_MENU_TITLE) SectionStartMenu
   CreateDirectory "$SMPROGRAMS\EntryLabs\${PRODUCT_NAME}"
   CreateShortCut "$SMPROGRAMS\EntryLabs\${PRODUCT_NAME}\$(TEXT_ENTRY_DELETE).lnk" "$INSTDIR\$(TEXT_ENTRY_DELETE).exe" "" "$INSTDIR\$(TEXT_ENTRY_DELETE).exe" 0
   CreateShortCut "$SMPROGRAMS\EntryLabs\${PRODUCT_NAME}\$(TEXT_ENTRY).lnk" "$INSTDIR\${PRODUCT_NAME}.exe" "" "$INSTDIR\icon.ico" 0
-  
+
 SectionEnd
 
 ;--------------------------------
@@ -149,7 +151,7 @@ Section $(TEXT_DESKTOP_TITLE) SectionDesktop
 
 	SetShellVarContext all
     CreateShortCut "$DESKTOP\$(TEXT_ENTRY).lnk" "$INSTDIR\${PRODUCT_NAME}.exe" "" "$INSTDIR\icon.ico" 0
-  
+
 SectionEnd
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
@@ -175,13 +177,15 @@ Section "Uninstall"
 
   ; Remove shortcuts, if any
   Delete "$SMPROGRAMS\EntryLabs\${PRODUCT_NAME}\*.*"
-  
+
   Delete "$DESKTOP\$(TEXT_ENTRY).lnk"
 
   ; Remove directories used
   RMDir "$SMPROGRAMS\EntryLabs\${PRODUCT_NAME}"
   RMDir /r "$INSTDIR"
 
+  ; Remove roaming/entry_hw directory for next version's localStorage
+  RMDir /r "$PROFILE\AppData\Roaming\entry_hw"
 SectionEnd
 
 Function LaunchLink
@@ -194,39 +198,39 @@ Function .onInit
   mfound:
 	KillProcDLL::KillProc "${APP_NAME}"
   notRunning:
- 
+
   ReadRegStr $R0 HKLM \
   "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" \
   "UninstallString"
   StrCmp $R0 "" done
-  
-  ReadRegStr $R1 HKLM "SOFTWARE\${PRODUCT_NAME}" "Install_Dir" 
+
+  ReadRegStr $R1 HKLM "SOFTWARE\${PRODUCT_NAME}" "Install_Dir"
   StrCmp $R1 "" done
- 
+
   MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
   $(SETUP_UNINSTALL_MSG) \
   IDOK uninst
   Abort
- 
+
   ;Run the uninstaller
   uninst:
     ClearErrors
     ;ExecWait '$R0 _?=$INSTDIR'
     ExecWait '$R0 _?=$R1'
- 
+
     ;IfErrors no_remove_uninstaller done
     ;no_remove_uninstaller:
     IfErrors 0 +2
 	  Goto no_remove_uninstaller
-	  RMDir /r /REBOOTOK $R1 
+	  RMDir /r /REBOOTOK $R1
 	  Goto done
-	  
+
   no_remove_uninstaller:
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
     DeleteRegKey HKLM "SOFTWARE\${PRODUCT_NAME}"
     DeleteRegKey HKCR "${PRODUCT_NAME}"
     DeleteRegKey HKCR "${PROTOCOL_NAME}"
-	
+
   done:
- 
+
 FunctionEnd

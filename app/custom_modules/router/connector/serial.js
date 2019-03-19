@@ -1,9 +1,14 @@
 'use strict';
+const Readline = require('@serialport/parser-readline'); // modify
+const Delimiter = require('@serialport/parser-delimiter');
+
 function Connector() {
 }
 
 Connector.prototype.open = function(port, options, callback) {
-	var serialport = require('../../serialport');
+	var serialport = require('@serialport/stream'); // modify
+	serialport.Binding = require('@entrylabs/bindings');
+	this.options = options; // modify
 
 	this.lostTimer = options.lostTimer || 500;
 	// options
@@ -14,18 +19,39 @@ Connector.prototype.open = function(port, options, callback) {
 	_options.dataBits = options.dataBits || options.databits || 8;
 	_options.stopBits = options.stopBits || options.stopbits || 1;
 	_options.bufferSize = options.bufferSize || options.buffersize || 65536;
-	if(options.delimiter) {
-		_options.parser = serialport.parsers.readline(options.delimiter);
-	}
+
+	// modify start
+	//	if(options.delimiter) {
+	//		_options.parser = serialport.parsers.readline(options.delimiter, options.encoding);
+	//	} else if(options.byteDelimiter) {
+	//		_options.parser = serialport.parsers.byteDelimiter(options.byteDelimiter);
+	//	}
+	// modify end
+
 	var flowcontrol = options.flowControl || options.flowcontrol;
 	if(flowcontrol === 'hardware') {
-		_options.flowControl = true;
+		//_options.flowControl = true;
+		_options.rtscts = true; // modify
 	} else if(flowcontrol === 'software') {
 		_options.flowControl = ['XON', 'XOFF'];
 	}
 
-	var sp = new serialport.SerialPort(port, _options);
+	var sp = new serialport(port, _options); // modify serialport.SerialPort --> serialport
 	this.sp = sp;
+
+	// modify start
+	if(options.delimiter) {
+		//_options.parser = serialport.parsers.readline(options.delimiter, options.encoding);
+		sp.parser = sp.pipe(new Readline(options));
+	} else if(options.byteDelimiter) {
+		// _options.parser = serialport.parsers.byteDelimiter(options.byteDelimiter);
+		sp.parser = sp.pipe(new Delimiter({
+			delimiter: options.byteDelimiter,
+			includeDelimiter: true,
+		}))
+	}
+	// modify end
+
 	sp.on('error', function(error) {
 		console.error(error);
 		if(callback) {
@@ -54,7 +80,25 @@ Connector.prototype.connect = function(extension, callback) {
 		if(extension.afterConnect) {
 			extension.afterConnect(self, callback);
 		}
-		sp.on('data', function(data) {
+
+		// modify start
+		var source = sp;
+		if(self.options.delimiter) {
+			source = sp.parser = sp.pipe(new Readline(self.options));
+		} else if(self.options.byteDelimiter) {
+			source = sp.parser = sp.pipe(new Delimiter({
+				delimiter: self.options.byteDelimiter,
+				includeDelimiter: true,
+			}));
+		}
+		source.on('data', function(data) {
+			// modify end
+			// modify start
+			if(self.options.stream == 'string') {
+				data = data.toString();
+			}
+			// modify end
+
 			var valid = true;
 			if(extension.validateLocalData) {
 				valid = extension.validateLocalData(data);
@@ -104,6 +148,12 @@ Connector.prototype.clear = function() {
 	}
 	if(this.sp) {
 		this.sp.removeAllListeners();
+
+		// modify start
+		if(this.sp.parser) {
+			this.sp.parser.removeAllListeners();
+		}
+		// modify end
 	}
 };
 
@@ -111,7 +161,7 @@ Connector.prototype.close = function() {
 	var self = this;
 	this.clear();
 	if(this.sp) {
-		if(this.sp.isOpen()) {
+		if(this.sp.isOpen) { // modify isOpen
 			this.sp.close(function (e) {
 				self.sp = undefined;
 			});
@@ -121,8 +171,15 @@ Connector.prototype.close = function() {
 
 Connector.prototype.send = function(data, callback) {
 	var that = this;
-	if(this.sp && this.sp.isOpen() && data && !this.sp.isSending) {
+	if(this.sp && this.sp.isOpen && data && !this.sp.isSending) { // modify isOpen
 		this.sp.isSending = true;
+
+		// modify start
+		if(this.options.stream == 'string') {
+			data = Buffer.from(data, 'utf8');
+		}
+		// modify end
+
 		this.sp.write(data, function () {
 			if(that.sp) {
 				that.sp.drain(function () {
